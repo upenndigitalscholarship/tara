@@ -1,5 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 
- 
 ###########################################################################################################
 ###########################################################################################################
 ###########################################################################################################
@@ -10,7 +11,7 @@
 #  *This is created on behalf of an UPENN Museum project directed by Holly Pittman, and Steve Tinney
 #  *Licensing has not yet been determined by the project so distribution is not allowed until source is made available on GIT with an associated license file
 #
-# 
+#
 #
 #==================================================================================================================================================
 
@@ -36,8 +37,8 @@ logger = logging.getLogger(__name__)
 hdlr = logging.FileHandler('/home/tara/log/django-db-log.log')
 formatter = logging.Formatter('%(asctime)s %(levelname)s [%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s')
 hdlr.setFormatter(formatter)
-logger.addHandler(hdlr) 
-###########################################################################################################        
+logger.addHandler(hdlr)
+###########################################################################################################
 ###########################################################################################################
 
 
@@ -49,7 +50,7 @@ logger.addHandler(hdlr)
 #   than having multiple hard-coded models or entity types in the database that require migrations when changing, I designed a single 'entity type' that
 #   can extend itself into as many unique entity types as necessary. This solves the complications of having to hard-code new models and structure when
 #   different projects require different configurations of data in the same database. Users essentially configure their own organization and templates.
-#   
+#
 #   |||DATABASE SCHEME DESIGN BRIEF|||
 #   ==================================
 #   --The Form Parent represents the top hiearchy of the entity groupings. Each project has its own set of entities, which are crafted as "Form Types"
@@ -62,7 +63,7 @@ logger.addHandler(hdlr)
 #                  \          /       |        \                                                    ||
 #                 ____FormType     FormType     FormType____                                        ||
 #                /         |       |      |       |         \                                       \/
-#               /          |       |      |       |          \                                etc. etc. etc.          
+#               /          |       |      |       |          \                                etc. etc. etc.
 #        _____Form_____   Form    Form  Form     Form        Form
 #       /       |      \            |     |        |           |
 #      /        |       \           V     V        V           V
@@ -92,7 +93,7 @@ logger.addHandler(hdlr)
 
 #This is a helper function for the project template images to give it a dynamic save location for images based on project
 def get_image_path(self, filename):
-    file_path = 'project-images/{project_id}/general/filename'.format(project_id=self.pk) 
+    file_path = 'project-images/{project_id}/general/filename'.format(project_id=self.pk)
     #Let's see if the file exists already(e.g. we're editing an image. If it does then delete it. We need to check for 3 different extension types
     # jpg  gif  and png. We will trim off the extension from file_path so we can quicky test
     path_to_check = os.path.join(settings.MEDIA_ROOT, file_path)[:-3]
@@ -100,49 +101,49 @@ def get_image_path(self, filename):
     if os.path.exists(path_to_check  + 'png'): os.remove(path_to_check  + 'png')
     if os.path.exists(path_to_check  + 'jpg'): os.remove(path_to_check  + 'jpg')
     if os.path.exists(path_to_check  + 'gif'): os.remove(path_to_check  + 'gif')
-    return file_path 
-        
+    return file_path
+
 class FormProject(models.Model):
     #----------------------------
     # Modifiable Variables
-    name = models.CharField('Project Name', max_length=50)    
+    name = models.CharField('Project Name', max_length=50)
     description = models.TextField(blank=True, null=True)
     shortname = models.CharField(max_length=20, null=True, blank=True)
-    
+
     uri_img = models.CharField(max_length=255, blank=True, null=True, default="")
     #URI Variables
     uri_thumbnail = models.CharField(max_length=255, blank=True, null=True, default="")
     uri_download = models.CharField(max_length=255, blank=True, null=True, default="")
     uri_upload = models.CharField(max_length=255, blank=True, null=True, default="")
-    uri_upload_key = models.CharField(max_length=255, blank=True, null=True, default="")
-    geojson_string = models.TextField(blank=True, null=True)
-    
+    uri_upload_key = models.CharField(max_length=255, blank=True, null=True, default="") #tag
+    geojson_string = models.TextField(blank=True, null=True) #tag
+
     #-----------------------------
     # Restrictive Access variables
     is_public = models.BooleanField(default=False)
-    
+
     #----------------------------
     # Read-only Variables
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='project_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='project_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #------------------------------------------------------------
     #Settings for the project's public website
     banner_image = models.ImageField(upload_to=get_image_path, null=True)
     background_image = models.ImageField(upload_to=get_image_path, null=True)
-    
+
     ui_colorA = models.CharField(max_length=10, default="#0057b9")
     ui_colorB = models.CharField(max_length=10, default="#00a1ff")
     ui_colorC = models.CharField(max_length=10, default="#5959c7")
     ui_colorD = models.CharField(max_length=10, default="#000000")
     font_color = models.CharField(max_length=10, default="#ffffff")
-    
+
     def __str__(self):
         return self.name
-        
-    
+
+
     #----------------------------------------------------------------------------------------
     # API SERIALIZER
     def serialize_to_dictionary(self):
@@ -153,8 +154,8 @@ class FormProject(models.Model):
         dict['date_created'] = self.date_created
         if self.created_by: dict['created_by'] = self.created_by.username
         else: dict['created_by'] = "None"
-        return dict          
-        
+        return dict
+
     def get_webpage_menu_list(self):
         #create a dropdown menu to use as a template for switching menugroup parents and other actions
         dropdown = "<select>"
@@ -172,7 +173,7 @@ class FormProject(models.Model):
         for page in self.webpage_set.filter(menugroup=None,flagged_for_deletion=False):
             menu_list += "<li pk='"+str(page.pk)+"'><button type='button' class='del-webpage-button'>X</button><a class='view' href='"+reverse('maqluengine:webpage', kwargs={'webpage_id': str(page.pk)})+"'>►</a><a href='#'>"+page.name+"</a></li>"
         menu_list += "</ul></ul>"
-        
+
         #We want to find all the menus that have no parent element first--these are the top of the nodes
         for menu in self.menugroup_set.filter(parentmenu=None):
             menu_list += "<ul class='menu'>"
@@ -192,13 +193,13 @@ class FormProject(models.Model):
                             menu_list += "</ul>"
                     menu_list += "</ul>"
                 menu_list += "</ul>"
-            menu_list += "</ul>"    
-        
+            menu_list += "</ul>"
+
         menu_list += "</div>"
         return menu_list
 
 
-        
+
 class FormTypeGroup(models.Model):
     name = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
@@ -211,52 +212,52 @@ class FormTypeGroup(models.Model):
     project = models.ForeignKey(FormProject, on_delete=models.CASCADE)
     def __str__(self):
         return self.name
-       
 
 
-       
+
+
 class FormType(models.Model):
     #----------------------------
     # Modifiable Variables
     form_type_name = models.CharField(max_length=50, blank=True, null=True)
-    type = models.IntegerField()#What kind of harcoded form type is it: e.g. 0= standard, 1= Media, 2= Geospatial Vector 3= Geospatial Raster
+    type = models.IntegerField()#What kind of harcoded form type is it: e.g. 0= standard, 1= Media, 2= Geospatial Vector 3= Geospatial Raster #tag
     media_type = models.IntegerField(default=-1) #is is an image 0, a pdf 1, or somethings else
     file_extension = models.CharField(max_length=10, blank=True, null=True, default="")
     uri_prefix = models.CharField(max_length=20, blank=True, null=True, default="")
     is_hierarchical = models.BooleanField(default=False)#determines whether or not the formtype's forms follow a hierchical structure
     is_numeric = models.BooleanField(default=False)
     primary_thumbnail_reference_pk = models.CharField(max_length=50, blank=True, null=True)
-    is_geospatial = models.BooleanField(default=False)
-    
+    is_geospatial = models.BooleanField(default=False) #tag
+
     #----------------------------
-    # Templating 
+    # Templating
     template_json = models.TextField(blank=True, null=True)
-    
+
     #-----------------------------
     # Restrictive Access variables
     is_public = models.BooleanField(default=False)
-    
+
     #----------------------------
     # Read-only Attributes
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='formtype_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='formtype_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #----------------------------
     # Model Relation Variables
     project = models.ForeignKey(FormProject, on_delete=models.CASCADE)
     form_type_group = models.ForeignKey(FormTypeGroup, on_delete=models.SET_NULL, blank=True, null=True)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-        
+
     def __str__(self):
         if self.form_type_name is not None:
             return self.form_type_name
         else:
-            return "No Label"                     
+            return "No Label"
 
     def string_list_hierarchy(self):
         global formList
@@ -266,7 +267,7 @@ class FormType(models.Model):
             logger.info( aForm.get_hierarchy_label() + "<!-----")
             formList.append([aForm.pk,aForm.get_hierarchy_label()])
             #Make a recursive function to search through all children
-            def find_children(currentParentForm):          
+            def find_children(currentParentForm):
                 global formList
                 for currentChild in currentParentForm.form_set.all():
                     logger.info( currentChild.get_hierarchy_label() + "<!-----")
@@ -289,15 +290,15 @@ class FormType(models.Model):
             project['name'] = self.project.name
             project['id'] = self.project.pk
             dict['project'] = project
-        else: 
+        else:
             dict['project'] = 'NULL'
-        return dict      
+        return dict
 
-        
-        
-        
-        
-                
+
+
+
+
+
 class FormRecordAttributeType(models.Model):
     #----------------------------
     # Modifiable Variables
@@ -316,11 +317,11 @@ class FormRecordAttributeType(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='frat_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='frat_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-            
+
     def __str__(self):
         if self.record_type is not None:
             return self.record_type
@@ -329,21 +330,21 @@ class FormRecordAttributeType(models.Model):
     def save(self, *args, **kwargs):
         self.project = self.form_type.project
         super(FormRecordAttributeType, self).save(*args, **kwargs)
-        
-   
 
 
 
-   
+
+
+
 class FormRecordReferenceType(models.Model):
     #----------------------------
     # Modifiable Variables
     record_type = models.CharField(max_length=50, blank=True, null=True)
     order_number = models.IntegerField(unique=False, blank=True, null=True)
-    
+
     #-----------------------------
     # Restrictive Access variables
-    is_public = models.BooleanField(default=False)	
+    is_public = models.BooleanField(default=False)
     project = models.ForeignKey(FormProject, on_delete=models.CASCADE)
     #----------------------------
     # Model Relation Variables
@@ -356,11 +357,11 @@ class FormRecordReferenceType(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='frrt_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='frrt_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-            
+
     def __str__(self):
         if self.record_type is not None:
             return self.record_type
@@ -371,31 +372,31 @@ class FormRecordReferenceType(models.Model):
         logging.info("In Models Before save  :" + str(self.form_type_reference) + str(self.record_type) )
         super(FormRecordReferenceType, self).save(*args, **kwargs)
         logging.info("In Models AFTER save  :" + str(self.form_type_reference) + str(self.record_type))
-  
 
 
-  
-        
+
+
+
 class Form(models.Model):
     #----------------------------
     # Modifiable Variables
     form_name = models.CharField(max_length=50, blank=True, null=True)
     form_number = models.IntegerField(unique=False, blank=True, null=True)
-    form_geojson_string = models.TextField(blank=True, null=True)
+    form_geojson_string = models.TextField(blank=True, null=True) #tag
     hierarchy_parent = models.ForeignKey('self', on_delete=models.SET_NULL, blank=True, null=True) #This is used for hierchical relations
-    
+
     #-----------------------------
     # Restrictive Access variables
     is_public = models.BooleanField(default=False)
     project = models.ForeignKey(FormProject, on_delete=models.CASCADE)
-    
+
     #----------------------------
     # Read-only Attributes
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='form_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='form_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #----------------------------------------
     # unique index for alpha-numeric sorting
     #^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -406,15 +407,15 @@ class Form(models.Model):
     #       --The form_pk is in the back to ensure this sort index will always be unique
     #       --A non-unique field would require far too much time to sort--hence I made this one.
     sort_index = models.CharField(max_length=255, unique=True)
-    
+
     #----------------------------
     # Model Relation Variables
     form_type = models.ForeignKey(FormType, on_delete=models.CASCADE)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-            
+
     def __str__(self):
         if self.form_number is not None:
            return str(self.form_number)
@@ -429,8 +430,8 @@ class Form(models.Model):
         else:
            #offer a default to "NO PREVIEW" if not found
            return staticfiles_storage.url("/site-images/no-thumb-missing.png")
-        
-    
+
+
     def get_hierarchy_label(self):
         logging.info("We're in the get hierarchy label function")
         label = ""
@@ -451,12 +452,12 @@ class Form(models.Model):
             return staticfiles_storage.url("/site-images/no-thumb-pdf.png")
         elif self.form_type.media_type == 1: #IMG File
             if self.form_type.uri_prefix != None or self.form_type.uri_prefix != "":
-                return self.form_type.project.uri_thumbnail + self.form_type.uri_prefix + self.form_name  + self.form_type.file_extension  
+                return self.form_type.project.uri_thumbnail + self.form_type.uri_prefix + self.form_name  + self.form_type.file_extension
             else:
-                return self.form_type.project.uri_thumbnail + self.form_name + self.form_type.file_extension  
+                return self.form_type.project.uri_thumbnail + self.form_name + self.form_type.file_extension
         else: #Other File Type
-            return staticfiles_storage.url("/site-images/no-thumb-file.png")   
-            
+            return staticfiles_storage.url("/site-images/no-thumb-file.png")
+
     def save(self, *args, **kwargs):
         #This save() override makes sure that every form has the same project as its formtype
         #   UUID: This function additionally creates the unique index value for sorting. Because we can't
@@ -476,7 +477,7 @@ class Form(models.Model):
         else:
             self.sort_index = "Empty---" + str(self.pk)
         super(Form, self).save(*args, **kwargs)
-        
+
     #----------------------------------------------------------------------------------------
     # API SERIALIZER
     #
@@ -489,16 +490,16 @@ class Form(models.Model):
         dict['date_created'] = self.date_created
         if self.created_by: dict['created_by'] = self.created_by.username
         else: dict['created_by'] = "None"
-        
+
         #Get Project if it exists(It should always exist)
         if self.project:
             project = {}
             project['name'] = self.project.name
             project['id'] = self.project.pk
             dict['project'] = project
-        else: 
+        else:
             dict['project'] = 'NULL'
-            
+
         #Get Meta data
         meta = {}
         meta['date_created'] = self.date_created
@@ -508,7 +509,7 @@ class Form(models.Model):
         if self.modified_by: meta['last_modified_by'] = self.modified_by.username
         else: meta['last_modified_by'] = None
         dict['meta'] = meta
-            
+
         #Get a list of all FRATS with their respective metadata
         frav_list = []
         fravs = self.formrecordattributevalue_set.all()
@@ -523,10 +524,10 @@ class Form(models.Model):
         if frrvs:
             for frrv in frrvs:
                 frrv_list.append(frrv.serialize_to_dictionary())
-        dict['record_reference_values']  = frrv_list        
-        
-        return dict   
-        
+        dict['record_reference_values']  = frrv_list
+
+        return dict
+
 class FormRecordAttributeValue(models.Model):
     #----------------------------
     # Modifiable Variables
@@ -542,11 +543,11 @@ class FormRecordAttributeValue(models.Model):
     record_attribute_type = models.ForeignKey(FormRecordAttributeType, on_delete=models.CASCADE)
     form_parent = models.ForeignKey(Form, null=True, blank=True, on_delete=models.CASCADE)
     project = models.ForeignKey(FormProject, on_delete=models.CASCADE)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-        
+
     def __str__(self):
         if self.record_value is not None:
             return self.record_value
@@ -562,8 +563,8 @@ class FormRecordAttributeValue(models.Model):
         dict['id'] = self.pk
         dict['value'] = self.record_value
         dict['label'] = self.record_attribute_type.record_type
-        dict['frat_id'] = self.record_attribute_type.id  
-        #Get Meta data            
+        dict['frat_id'] = self.record_attribute_type.id
+        #Get Meta data
         meta = {}
         meta['date_created'] = self.date_created
         meta['date_last_modified'] = self.date_last_modified
@@ -573,7 +574,7 @@ class FormRecordAttributeValue(models.Model):
         else: meta['last_modified_by'] = None
         dict['meta'] = meta
         return dict
-        
+
 class FormRecordReferenceValue(models.Model):
     #----------------------------
     #This foreignKey stores the reference to another Form e.g. the Lot Sheet Number that this Lithic Object is attached to
@@ -594,11 +595,11 @@ class FormRecordReferenceValue(models.Model):
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='formref_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='formref_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-    
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-            
+
     def save(self, *args, **kwargs):
         self.project = self.form_parent.project
         super(FormRecordReferenceValue, self).save(*args, **kwargs)
@@ -615,10 +616,10 @@ class FormRecordReferenceValue(models.Model):
            new_ref['name'] = reference.form_name
            new_ref['id'] =  reference.pk
            refs.append(new_ref)
-        dict['references'] = refs   
+        dict['references'] = refs
         dict['label'] = self.record_reference_type.record_type
-        dict['frrt_id'] = self.record_reference_type.id  
-        #Get Meta data            
+        dict['frrt_id'] = self.record_reference_type.id
+        #Get Meta data
         meta = {}
         meta['date_created'] = self.date_created
         meta['date_last_modified'] = self.date_last_modified
@@ -628,63 +629,63 @@ class FormRecordReferenceValue(models.Model):
         else: meta['last_modified_by'] = None
         dict['meta'] = meta
         return dict
-        
 
-        
-        
-        
-        
-        
+
+
+
+
+
+
 #---------------------------------------------------------------------------------------------------------------------
 #This extends the BaseUser model Django uses for authentication--I'm extending it to add special security variables
 #   --This is necessary to ensure all users are tied to one project and access level--everytime an Admin view loads
 #   --It MUST check the user in the current session and make absolute sure that they accessing a project that they
-#   --belong to AS WELL as make sure they have acess permissions within that project to access that page, e.g. make 
+#   --belong to AS WELL as make sure they have acess permissions within that project to access that page, e.g. make
 #   --make changes to their project's database records.
 class Permissions(models.Model):
     #Link it to the User Model
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    
+
     #Every user MUST have a project, and access level set for that project
     project = models.ForeignKey(FormProject, null=True, blank=True, on_delete=models.CASCADE)
     access_level = models.IntegerField(null=True, blank=True)
-    
+
     #TARA Master Admin Flag
     master_admin = models.BooleanField(default=False, null=False, blank=False)
-    
+
     #Some meta fields to describe the user
     job_title = models.CharField('Enter a Title', max_length=100)
 
     #Some stored user data(These will hold JSON strings)
     custom_templates = models.TextField(blank=True, null=True)
     saved_queries = models.TextField(blank=True, null=True)
-    
+
 @receiver(post_save, sender=User)
 def create_user_permissions(sender, instance, created, **kwargs):
     if created:
         Permissions.objects.create(user=instance)
-        
+
 
 @receiver(post_save, sender=User)
 def save_user_permissions(sender, instance, **kwargs):
     instance.permissions.save()
 
 
-    
-    
-    
-    
-    
+
+
+
+
+
 #=======================================================================================================================================================
 #=======================================================================================================================================================
 #       MODEL SCHEMA FOR FRONT-END WEBSITES
 #=======================================================================================================================================================
-#=======================================================================================================================================================    
+#=======================================================================================================================================================
 #
 #   This essentially operates the same as above, but far simpler
 #
 #   Each 'webpage' is attached to a project, and can additionally be attached to a 'menugroup' to arbitrarily group pages together. 'Menugroups's can be
-#   linked together to create 'nested' groups of pages, e.g. 
+#   linked together to create 'nested' groups of pages, e.g.
 #
 #      >>Excavations
 #       >>Season 1 Excavation
@@ -700,42 +701,42 @@ def save_user_permissions(sender, instance, **kwargs):
 #=======================================================================================================================================================
 
 
-    
+
 class Menugroup(models.Model):
     #Components
     name =   models.CharField(blank=True, null=True,max_length=50)
     parentmenu = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL)#We don't want our submenu deleted if the parent menu is--it converts into a parent menu
-    
+
     #Everything MUST have a project, and access level set for that project
     project = models.ForeignKey(FormProject, null=True, blank=True, on_delete=models.CASCADE)
-    
+
     def __str__(self):
-        return self.name  
+        return self.name
 
 
-#If a webpage has NO project, then it belongs to the TARA admin  group 
+#If a webpage has NO project, then it belongs to the TARA admin  group
 class Webpage(models.Model):
     #Components
     name =   models.CharField(blank=True, null=True,max_length=50)
     content = models.TextField(blank=True, null=True)
-    
+
     #Everything MUST have a project, and access level set for that project
     project = models.ForeignKey(FormProject, null=True, blank=True, on_delete=models.CASCADE)
     menugroup = models.ForeignKey(Menugroup, null=True, blank=True, on_delete=models.SET_NULL)#We NEVER want to delete ANY pages if a menu group is deleted--the menugroups are arbitrary organization mechanisms
-    
+
     #----------------------------
     # Read-only Attributes
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='webpage_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='webpage_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-  
+
     #----------------------------
     # Recycling Bin Flag
     flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
-    
+
     def __str__(self):
-        return self.name   
+        return self.name
 
     #----------------------------------------------------------------------------------------
     # API SERIALIZER
@@ -750,7 +751,7 @@ class Webpage(models.Model):
             menugroup['name'] = self.menugroup.name
             menugroup['id'] = self.menugroup.pk
             dict['menugroup'] = menugroup
-        else: 
+        else:
             dict['menugroup'] = 'NONE'
         if self.created_by: dict['created_by'] = self.created_by.username
         else: dict['created_by'] = "None"
@@ -759,28 +760,28 @@ class Webpage(models.Model):
             project['name'] = self.project.name
             project['id'] = self.project.pk
             dict['project'] = project
-        else: 
+        else:
             dict['project'] = 'TARA Admin'
-        return dict   
-    
-    
-    
+        return dict
+
+
+
 #=======================================================================================================================================================
 #=======================================================================================================================================================
 #       MODEL SCHEMA FOR BLOG POSTS AND COMMENTS
 #=======================================================================================================================================================
-#=======================================================================================================================================================        
+#=======================================================================================================================================================
 #
 #
-#-------------------------------------------------------------------------------------------------------------------------------------------------------    
+#-------------------------------------------------------------------------------------------------------------------------------------------------------
 
 #This is a helper function for the blogpost to give it a dynamic sav location for images based on project
 def content_file_name(instance, filename):
     name, ext = filename.split('.')
     if instance.project:
-        file_path = 'project-images/{project_id}/photos/blog_img_{blog_id}.{ext}'.format(project_id=instance.project_id, blog_id=instance.id, ext=ext) 
+        file_path = 'project-images/{project_id}/photos/blog_img_{blog_id}.{ext}'.format(project_id=instance.project_id, blog_id=instance.id, ext=ext)
     else:
-        file_path = 'project-images/tara/photos/blog_img_{blog_id}.{ext}'.format(blog_id=instance.id, ext=ext) 
+        file_path = 'project-images/tara/photos/blog_img_{blog_id}.{ext}'.format(blog_id=instance.id, ext=ext)
     #Let's see if the file exists already(e.g. we're editing an image. If it does then delete it. We need to check for 3 different extension types
     # jpg  gif  and png. We will trim off the extension from file_path so we can quicky test
     path_to_check = os.path.join(settings.MEDIA_ROOT, file_path)[:-3]
@@ -788,42 +789,42 @@ def content_file_name(instance, filename):
     if os.path.exists(path_to_check  + 'png'): os.remove(path_to_check  + 'png')
     if os.path.exists(path_to_check  + 'jpg'): os.remove(path_to_check  + 'jpg')
     if os.path.exists(path_to_check  + 'gif'): os.remove(path_to_check  + 'gif')
-    
+
     return file_path
 
-   
-    
-    
 
-#Blog Posts made without a "Project" Belong to the TARA admin group    
+
+
+
+#Blog Posts made without a "Project" Belong to the TARA admin group
 class BlogPost(models.Model):
     #Components
     name =   models.CharField(blank=True, null=True,max_length=50)
     content = models.TextField(blank=True, null=True)
     image = models.ImageField(upload_to=content_file_name, default='project-images/tara/tara_logo.png')
-    
+
     #Everything MUST have a project
     project = models.ForeignKey(FormProject, null=True, blank=True, on_delete=models.CASCADE)
-    
+
     #----------------------------
     # Read-only Attributes
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='blogpost_ref_to_user_creator', blank = True, null=True, on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='blogpost_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-  
+
     #----------------------------
     # Recycling Bin Flag
-    flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)   
+    flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
 
     #Grabs the next newest post by date. If this is the most recent post, it returns None
     def next_post(self):
         return None
-    
+
     #Grabs the last post made before the current by date. If the current is the oldest post, it returns None
     def last_post(self):
         return None
-    
+
     #----------------------------------------------------------------------------------------
     # API SERIALIZER
     def serialize_to_dictionary(self):
@@ -838,54 +839,54 @@ class BlogPost(models.Model):
             project['name'] = self.project.name
             project['id'] = self.project.pk
             dict['project'] = project
-        else: 
+        else:
             dict['project'] = 'TARA Admin'
         return dict
-        
-class BlogComment(models.Model):    
+
+class BlogComment(models.Model):
     #Components
     content = models.TextField(blank=True, null=True)
-    
+
     #Everything MUST have a project, and access level set for that project
     project = models.ForeignKey(FormProject, null=True, blank=True, on_delete=models.CASCADE)
 
     #User control
     user = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL)
-    
+
     blogpost = models.ForeignKey(BlogPost, null=True, blank=True, on_delete=models.CASCADE)
     parent_comment = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
-    
+
     #----------------------------
     # Read-only Attributes
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='blogcomment_ref_to_user_creator', blank = True, null=True,on_delete=models.SET_NULL)
     date_last_modified = models.DateTimeField(auto_now = True, auto_now_add = False,blank=True, null=True)
     modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, related_name='blogcomment_ref_to_user_modifier', blank = True, null=True,on_delete=models.SET_NULL)
-  
+
     #----------------------------
     # Recycling Bin Flag
-    flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)        
-    
-    
-    
-    
-    
+    flagged_for_deletion = models.BooleanField(default=False, null=False, blank=False)
 
-#---------------------------------------------------------------------------------------------------------------------        
+
+
+
+
+
+#---------------------------------------------------------------------------------------------------------------------
 #This model stores temporary objects that are part of a long-running process that can return json
 #to a request to update ongoing progress, e.g. if the user is importing a large CSV file into the database,
-#this model will store the regularly updated progress that returns with susbequent AJAX requests to update 
+#this model will store the regularly updated progress that returns with susbequent AJAX requests to update
 #a progress bar for a server-side process.
 #
 #   --These have a generated UUID and should be considered temporary. Once the process is complete, it should
 #       make a final send for an AJAX request and delete the current object. Keeping it as an object model should
-#       allow for multiple users running separate processes at the same time and keep it organized    
+#       allow for multiple users running separate processes at the same time and keep it organized
 class AJAXRequestData(models.Model):
     uuid = models.CharField(max_length=32)
     is_finished = models.BooleanField(default=False)
     keep_alive = models.BooleanField(default=True)
     jsonString = models.TextField()
-    def __str__(self):   
+    def __str__(self):
         return str(uuid)
 
 
@@ -894,29 +895,12 @@ class SecurityMessage(models.Model):
     content = models.TextField(blank=True, null=True)
     seen_by_admin = models.BooleanField(default=False)
     date_created = models.DateTimeField(auto_now = False, auto_now_add = True,blank=True, null=True)
-    
 
- 
-    
+
+
+
 ###########################################################################################################
-#                   END NEW DATABASE SCHEMA 
+#                   END NEW DATABASE SCHEMA
 ###########################################################################################################
 ###########################################################################################################
 ###########################################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

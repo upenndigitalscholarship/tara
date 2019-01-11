@@ -248,7 +248,7 @@ class MaqluengineAjaxrequestdata(models.Model):
 
 class MaqluengineForm(models.Model):
     form_type_id = models.IntegerField()
-    form_geojson_string = models.TextField(blank=True, null=True)
+    form_geojson_string = models.TextField(blank=True, null=True) #tag
     form_number = models.IntegerField(blank=True, null=True)
     form_name = models.CharField(max_length=50, blank=True, null=True)
     date_created = models.DateTimeField(blank=True, null=True)
@@ -279,7 +279,7 @@ class MaqluengineFormproject(models.Model):
     uri_download = models.CharField(max_length=255, blank=True, null=True)
     uri_upload = models.CharField(max_length=255, blank=True, null=True)
     uri_upload_key = models.CharField(max_length=255, blank=True, null=True)
-    geojson_string = models.TextField(blank=True, null=True)
+    geojson_string = models.TextField(blank=True, null=True) #tag
 
     class Meta:
         managed = False

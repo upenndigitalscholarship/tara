@@ -1,0 +1,8 @@
+need to install Pillow
+then need to migrate sites
+then need to restart apache2
+manage.py createsuperuser
+> create superuser with username, email, password
+manage.py migrate (again)
+then need to add permissions for the user you created
+new problem: user has no permissions (penn_admin); can't log in anymore
